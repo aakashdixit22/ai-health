@@ -70,7 +70,7 @@ const AboutUs = () => {
           </p>
           <p className="text-lg text-gray-600 leading-relaxed">
             With a focus on innovation, privacy, and trust, we’re building the
-            future of health—one step at a time.
+            future of health—one step at a 
           </p>
         </motion.div>
       </div>
