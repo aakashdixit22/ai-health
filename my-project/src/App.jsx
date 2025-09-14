@@ -15,11 +15,21 @@ function App() {
   return (
     <>
       <Navbar />
-      <Hero />
-      <Features />
-      <AboutUs />
-      <Testimonials />
-      <Footer />
+      <section id="home">
+        <Hero />
+      </section>
+      <section id="features">
+        <Features />
+      </section>
+      <section id="about">
+        <AboutUs />
+      </section>
+      <section id="testimonials">
+        <Testimonials />
+      </section>
+      <section id="contact">
+        <Footer />
+      </section>
     </>
   )
 }
