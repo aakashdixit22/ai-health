@@ -101,7 +101,7 @@ import { motion } from "framer-motion";
 
 const testimonials = [
   {
-    name: "Anaya",
+    name: "Anay",
     role: "Software Engineer",
     feedback:
       "This platform helped me understand my health better with instant AI recommendations. Super intuitive and reliable!",
