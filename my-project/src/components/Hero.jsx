@@ -1,6 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { useTheme } from "../contexts/ThemeContext";
 
 const AIHealthHero = () => {
+  const { isDarkMode } = useTheme();
+  const navigate = useNavigate();
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
@@ -76,7 +80,11 @@ const AIHealthHero = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden">
+    <div className={`min-h-screen flex flex-col items-center justify-center px-4 py-16 relative overflow-hidden transition-colors duration-300 ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
+        : 'bg-slate-50'
+    }`}>
       {/* Enhanced Animations */}
       <style jsx>{`
         @keyframes float {
@@ -217,11 +225,19 @@ const AIHealthHero = () => {
       {/* Professional Header Badge */}
       <div className="mb-8 relative z-10">
         <div className="flex items-center justify-center">
-          <div className="bg-white border border-slate-200 shadow-sm px-6 py-3 rounded-full hover:shadow-md transition-shadow cursor-pointer">
+          <div className={`border shadow-sm px-6 py-3 rounded-full hover:shadow-md transition-shadow cursor-pointer ${
+            isDarkMode 
+              ? 'bg-gray-800 border-gray-600 shadow-gray-900/20 hover:shadow-gray-900/30' 
+              : 'bg-white border-slate-200'
+          }`}>
             <div className="flex items-center space-x-2">
               <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-slate-700 font-medium text-sm">AI-Powered Healthcare Platform</span>
-              <div className="w-5 h-5 text-slate-400">
+              <span className={`font-medium text-sm ${
+                isDarkMode ? 'text-gray-300' : 'text-slate-700'
+              }`}>AI-Powered Healthcare Platform</span>
+              <div className={`w-5 h-5 ${
+                isDarkMode ? 'text-gray-400' : 'text-slate-400'
+              }`}>
                 <ShieldIcon className="w-full h-full" />
               </div>
             </div>
@@ -231,7 +247,9 @@ const AIHealthHero = () => {
 
       {/* Enhanced Main Content */}
       <div className="text-center max-w-5xl mx-auto mb-16 relative z-10">
-        <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight mb-8 text-slate-800">
+        <h1 className={`text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight mb-8 ${
+          isDarkMode ? 'text-white' : 'text-slate-800'
+        }`}>
           <span className="inline-block" style={{ animation: "slideInUp 0.8s ease-out" }}>
             Advanced AI-Driven 
           </span>
@@ -246,7 +264,9 @@ const AIHealthHero = () => {
         </h1>
 
         <p 
-          className="text-slate-600 text-xl md:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed font-light"
+          className={`text-xl md:text-2xl max-w-3xl mx-auto mb-12 leading-relaxed font-light ${
+            isDarkMode ? 'text-gray-300' : 'text-slate-600'
+          }`}
           style={{ animation: "slideInUp 0.8s ease-out 0.4s both" }}
         >
           Upload your medical documents and receive comprehensive AI-powered health insights, 
@@ -259,8 +279,12 @@ const AIHealthHero = () => {
           style={{ animation: "slideInUp 0.8s ease-out 0.6s both" }}
         >
           <button
-            className="group bg-slate-900 text-white px-10 py-4 rounded-full text-lg font-medium hover:bg-slate-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 relative overflow-hidden"
-            onClick={() => document.getElementById("file-upload").click()}
+            className={`group px-10 py-4 rounded-full text-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1 relative overflow-hidden ${
+              isDarkMode 
+                ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                : 'bg-slate-900 text-white hover:bg-slate-800'
+            }`}
+            onClick={() => navigate('/second')}
           >
             <span className="relative z-10 flex items-center space-x-2">
               <span>Start Analysis</span>
@@ -286,20 +310,32 @@ const AIHealthHero = () => {
 
         {/* Enhanced Analysis Status */}
         {isAnalyzing && (
-          <div className="flex items-center justify-center space-x-3 text-blue-600 font-medium">
+          <div className={`flex items-center justify-center space-x-3 font-medium ${
+            isDarkMode ? 'text-blue-400' : 'text-blue-600'
+          }`}>
             <div className="w-5 h-5">
               <HeartbeatIcon className="w-full h-full animate-pulse" />
             </div>
             <span className="animate-pulse">Analyzing your medical data...</span>
             <div className="flex space-x-1">
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce"></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-              <div className="w-2 h-2 bg-blue-600 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+              <div className={`w-2 h-2 rounded-full animate-bounce ${
+                isDarkMode ? 'bg-blue-400' : 'bg-blue-600'
+              }`}></div>
+              <div className={`w-2 h-2 rounded-full animate-bounce ${
+                isDarkMode ? 'bg-blue-400' : 'bg-blue-600'
+              }`} style={{ animationDelay: '0.1s' }}></div>
+              <div className={`w-2 h-2 rounded-full animate-bounce ${
+                isDarkMode ? 'bg-blue-400' : 'bg-blue-600'
+              }`} style={{ animationDelay: '0.2s' }}></div>
             </div>
           </div>
         )}
         {analysisComplete && (
-          <div className="bg-green-50 border border-green-200 rounded-full px-6 py-3 inline-flex items-center space-x-2 text-green-700 font-medium">
+          <div className={`border rounded-full px-6 py-3 inline-flex items-center space-x-2 font-medium ${
+            isDarkMode 
+              ? 'bg-green-900/20 border-green-700/30 text-green-400' 
+              : 'bg-green-50 border-green-200 text-green-700'
+          }`}>
             <div className="w-5 h-5">
               <ShieldIcon className="w-full h-full" />
             </div>
