@@ -1,15 +1,18 @@
-import React from "react";
-import { ArrowRight, Sun, Moon } from "lucide-react";
+import React, { useState } from "react";
+import { ArrowRight, Sun, Moon, Menu, X } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 
 const Navbar = () => {
   const { isDarkMode, toggleTheme } = useTheme();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+    // Close mobile menu after clicking a link
+    setIsMobileMenuOpen(false);
   };
 
   const Button = ({ children, size, className = "", ...props }) => {
@@ -46,7 +49,7 @@ const Navbar = () => {
             </span>
           </div>
 
-          {/* Centered Navigation Pills */}
+          {/* Centered Navigation Pills - Desktop */}
           <div className="hidden md:flex items-center justify-center flex-1">
             <div className={`flex items-center space-x-1 rounded-full backdrop-blur-sm border p-1 shadow-inner ${
               isDarkMode 
@@ -106,8 +109,27 @@ const Navbar = () => {
             </div>
           </div>
 
+          {/* Spacer for mobile to keep logo left-aligned */}
+          <div className="md:hidden flex-1"></div>
+
           {/* CTA Button and Theme Toggle on Right */}
           <div className="flex items-center space-x-2">
+            {/* Mobile Menu Button - visible only on mobile */}
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`md:hidden p-2 rounded-full transition-all ${
+                isDarkMode 
+                  ? 'text-gray-300 hover:bg-gray-700/40 hover:text-white' 
+                  : 'text-slate-700 hover:bg-blue-100/40 hover:text-slate-800'
+              }`}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
+            </button>
             {/* Theme Toggle Button */}
             <button
               onClick={toggleTheme}
@@ -125,13 +147,85 @@ const Navbar = () => {
               )}
             </button>
             
-            {/* Get Started Button */}
-            <Button size="sm">
-              <span className="group-hover:hidden">Get Started</span>
-              <span className="hidden group-hover:inline">Coming Soon</span> <ArrowRight className="ml-2 h-4 w-4" />
-            </Button>
+            {/* Get Started Button - hidden on small screens */}
+            <div className="hidden sm:block">
+              <Button size="sm">
+                <span className="group-hover:hidden">Get Started</span>
+                <span className="hidden group-hover:inline">Coming Soon</span> <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
+
+        {/* Mobile Menu - appears below the navbar when open */}
+        {isMobileMenuOpen && (
+          <div className={`md:hidden mt-2 rounded-2xl backdrop-blur-md border shadow-lg overflow-hidden ${
+            isDarkMode 
+              ? 'bg-gray-900/90 border-gray-700/30' 
+              : 'bg-white/90 border-blue-200/30'
+          }`}>
+            <div className="px-6 py-4 space-y-2">
+              <button
+                onClick={() => scrollToSection('home')}
+                className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                  isDarkMode 
+                    ? 'text-gray-300 hover:bg-gray-700/40 hover:text-white' 
+                    : 'text-slate-700 hover:bg-blue-100/40 hover:text-slate-800'
+                }`}
+              >
+                Home
+              </button>
+              <button
+                onClick={() => scrollToSection('features')}
+                className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                  isDarkMode 
+                    ? 'text-gray-300 hover:bg-gray-700/40 hover:text-white' 
+                    : 'text-slate-700 hover:bg-blue-100/40 hover:text-slate-800'
+                }`}
+              >
+                Features
+              </button>
+              <button
+                onClick={() => scrollToSection('features')}
+                className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                  isDarkMode 
+                    ? 'text-gray-300 hover:bg-gray-700/40 hover:text-white' 
+                    : 'text-slate-700 hover:bg-blue-100/40 hover:text-slate-800'
+                }`}
+              >
+                Agents
+              </button>
+              <button
+                onClick={() => scrollToSection('about')}
+                className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                  isDarkMode 
+                    ? 'text-gray-300 hover:bg-gray-700/40 hover:text-white' 
+                    : 'text-slate-700 hover:bg-blue-100/40 hover:text-slate-800'
+                }`}
+              >
+                About
+              </button>
+              <button
+                onClick={() => scrollToSection('contact')}
+                className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                  isDarkMode 
+                    ? 'text-gray-300 hover:bg-gray-700/40 hover:text-white' 
+                    : 'text-slate-700 hover:bg-blue-100/40 hover:text-slate-800'
+                }`}
+              >
+                Contact
+              </button>
+              
+              {/* Mobile Get Started Button */}
+              <div className="pt-2 sm:hidden">
+                <Button size="md" className="w-full">
+                  <span className="group-hover:hidden">Get Started</span>
+                  <span className="hidden group-hover:inline">Coming Soon</span> <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </nav>
   );
