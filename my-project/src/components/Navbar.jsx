@@ -183,7 +183,7 @@ const Navbar = () => {
                     : 'text-slate-700 hover:bg-blue-100/40 hover:text-slate-800'
                 }`}
               >
-                Feature
+                Features
               </button>
               <button
                 onClick={() => scrollToSection('features')}
