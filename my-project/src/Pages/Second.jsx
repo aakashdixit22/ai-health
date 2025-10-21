@@ -1,12 +1,66 @@
-import React, { useState } from 'react';
-import { Upload, Sparkles, FileText } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  Upload, 
+  Send, 
+  Plus, 
+  Trash2, 
+  MessageSquare, 
+  FileText, 
+  User, 
+  Bot,
+  Loader2,
+  AlertCircle
+} from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useChat } from '../contexts/ChatContext';
+import { useNavigate } from 'react-router-dom';
 
 function Second() {
   const { isDarkMode } = useTheme();
+  const { isAuthenticated, user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const {
+    conversations,
+    currentConversation,
+    chatHistory,
+    loading,
+    error,
+    loadConversations,
+    loadConversationDetails,
+    createConversation,
+    sendMessage,
+    uploadFileAndSendMessage,
+    deleteConversation,
+    clearError
+  } = useChat();
+
   const [inputText, setInputText] = useState('');
   const [dragActive, setDragActive] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [showSidebar, setShowSidebar] = useState(true);
+  const messagesEndRef = useRef(null);
+  const fileInputRef = useRef(null);
+
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      navigate('/login');
+    }
+  }, [isAuthenticated, authLoading, navigate]);
+
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory]);
+
+  // Load conversations on mount
+  useEffect(() => {
+    if (isAuthenticated) {
+      loadConversations();
+    }
+  }, [isAuthenticated]);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -23,169 +77,519 @@ function Second() {
     e.stopPropagation();
     setDragActive(false);
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      console.log('Files dropped:', e.dataTransfer.files);
+      setSelectedFile(e.dataTransfer.files[0]);
     }
   };
 
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
-      console.log('Files selected:', e.target.files);
+      setSelectedFile(e.target.files[0]);
     }
   };
 
-  const handleGenerate = () => console.log('Generating with AI...');
-  const handleExportPDF = () => console.log('Exporting to PDF...');
+  const handleSendMessage = async () => {
+    if (!currentConversation) {
+      // Create new conversation first
+      const newConv = await createConversation();
+      if (newConv) {
+        await loadConversationDetails(newConv.id);
+      }
+      return;
+    }
+
+    if (selectedFile) {
+      await uploadFileAndSendMessage(selectedFile);
+      setSelectedFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    } else if (inputText.trim()) {
+      await sendMessage(inputText.trim());
+      setInputText('');
+    }
+  };
+
+  const handleCreateNewConversation = async () => {
+    const newConv = await createConversation();
+    if (newConv) {
+      await loadConversationDetails(newConv.id);
+    }
+  };
+
+  const handleSelectConversation = async (conversation) => {
+    await loadConversationDetails(conversation.id);
+  };
+
+  const handleDeleteConversation = async (conversationId, e) => {
+    e.stopPropagation(); // Prevent triggering the select conversation handler
+    if (window.confirm('Are you sure you want to delete this conversation?')) {
+      await deleteConversation(conversationId);
+    }
+  };
+
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Show loading screen while checking authentication
+  if (authLoading) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-gray-900 text-white' 
+          : 'bg-gray-50 text-gray-900'
+      }`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-lg">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null; // Will redirect to login
+  }
 
   return (
-    <div className={`min-h-screen p-6 pt-20 transition-colors duration-300 ${
+    <div className={`min-h-screen flex transition-colors duration-300 ${
       isDarkMode 
-        ? 'bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900' 
-        : 'bg-gradient-to-br from-blue-50 via-white to-green-50'
+        ? 'bg-gray-900' 
+        : 'bg-gray-50'
     }`}>
-      <div className="max-w-4xl mx-auto">
-        {/* Heading */}
-        <motion.div 
-          className="text-center mb-10"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <h1 className={`text-4xl md:text-5xl font-bold mb-4 ${
-            isDarkMode ? 'text-white' : 'text-gray-800'
-          }`}>
-            Hey, I am your Health Assistant
-          </h1>
-          <h2 className={`text-lg md:text-xl ${
-            isDarkMode ? 'text-gray-300' : 'text-gray-600'
-          }`}>
-            Upload files or describe your symptoms for instant insights
-          </h2>
-        </motion.div>
-
-        {/* Upload Area */}
-        <motion.div
-          className={`backdrop-blur-md rounded-2xl shadow-xl p-8 mb-6 border hover:shadow-2xl transition-all duration-300 ${
-            isDarkMode 
-              ? 'bg-gray-800/70 border-gray-700' 
-              : 'bg-white/70 border-gray-100'
-          }`}
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <div
-            className={`relative border-2 border-dashed rounded-xl p-8 transition-all duration-300 ${
-              dragActive
-                ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/30'
-                : `${
-                    isDarkMode 
-                      ? 'border-gray-600 hover:border-blue-400 hover:bg-gray-700/50' 
-                      : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
-                  }`
+      {/* Sidebar */}
+      <AnimatePresence>
+        {showSidebar && (
+          <motion.div
+            initial={{ x: -300 }}
+            animate={{ x: 0 }}
+            exit={{ x: -300 }}
+            className={`w-80 h-screen border-r flex flex-col ${
+              isDarkMode 
+                ? 'bg-gray-800 border-gray-700' 
+                : 'bg-white border-gray-200'
             }`}
-            onDragEnter={handleDrag}
-            onDragLeave={handleDrag}
-            onDragOver={handleDrag}
-            onDrop={handleDrop}
           >
-            <input
-              type="file"
-              multiple
-              accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
-              onChange={handleFileSelect}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-            />
-            <div className="text-center">
-              <Upload className="mx-auto h-12 w-12 text-blue-500 mb-3" />
-              <p className={`text-lg font-semibold ${
-                isDarkMode ? 'text-white' : 'text-gray-700'
-              }`}>
-                Drop your files here or click to browse
-              </p>
-              <p className={`text-sm mt-1 ${
-                isDarkMode ? 'text-gray-400' : 'text-gray-500'
-              }`}>
-                Supports PDF, DOC, TXT, and image files
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-6">
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              placeholder="Or describe your symptoms or concerns here..."
-              className={`w-full h-32 p-4 border rounded-xl resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all ${
-                isDarkMode 
-                  ? 'border-gray-600 bg-gray-700/50 text-white placeholder-gray-400' 
-                  : 'border-gray-300 bg-white text-gray-900 placeholder-gray-500'
-              }`}
-            />
-          </div>
-        </motion.div>
-
-        {/* Buttons */}
-        <motion.div 
-          className="flex flex-col sm:flex-row gap-4 justify-center"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-        >
-          <button
-            onClick={handleGenerate}
-            className="flex items-center gap-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all"
-          >
-            <Sparkles className="h-5 w-5" />
-            Generate with AI
-          </button>
-          <button
-            onClick={handleExportPDF}
-            className="flex items-center gap-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700 text-white font-semibold py-4 px-8 rounded-xl shadow-md hover:shadow-xl transform hover:scale-105 transition-all"
-          >
-            <FileText className="h-5 w-5" />
-            Export to PDF
-          </button>
-        </motion.div>
-
-        {/* Steps */}
-        <motion.div
-          className="mt-12 text-center"
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7 }}
-        >
-          <div className={`backdrop-blur-sm rounded-xl p-8 border shadow-lg ${
-            isDarkMode 
-              ? 'bg-gray-800/60 border-gray-700' 
-              : 'bg-white/60 border-gray-100'
-          }`}>
-            <h3 className={`text-lg font-bold mb-6 ${
-              isDarkMode ? 'text-white' : 'text-gray-800'
+            {/* Sidebar Header */}
+            <div className={`p-4 border-b ${
+              isDarkMode ? 'border-gray-700' : 'border-gray-200'
             }`}>
-              How it works
-            </h3>
-            <div className={`grid md:grid-cols-3 gap-8 ${
-              isDarkMode ? 'text-gray-300' : 'text-gray-600'
-            }`}>
-              {[
-                { num: 1, color: 'blue', text: 'Upload documents or describe symptoms' },
-                { num: 2, color: 'purple', text: 'AI analyzes and provides insights' },
-                { num: 3, color: 'green', text: 'Export results as PDF' },
-              ].map((step, idx) => (
-                <motion.div
-                  key={idx}
-                  whileHover={{ scale: 1.05 }}
-                  className="flex flex-col items-center"
+              <div className="flex items-center justify-between mb-4">
+                <h2 className={`text-lg font-semibold ${
+                  isDarkMode ? 'text-white' : 'text-gray-900'
+                }`}>
+                  Health Assistant
+                </h2>
+                <button
+                  onClick={() => setShowSidebar(false)}
+                  className={`p-2 rounded-lg ${
+                    isDarkMode 
+                      ? 'hover:bg-gray-700 text-gray-400' 
+                      : 'hover:bg-gray-100 text-gray-600'
+                  }`}
                 >
-                  <div className={`w-10 h-10 bg-${step.color}-100 dark:bg-${step.color}-900/30 rounded-full flex items-center justify-center mb-3 shadow-inner`}>
-                    <span className={`text-${step.color}-600 dark:text-${step.color}-400 font-bold`}>{step.num}</span>
+                  ×
+                </button>
+              </div>
+              
+              <button
+                onClick={handleCreateNewConversation}
+                disabled={loading}
+                className={`w-full flex items-center gap-2 p-3 rounded-lg font-medium transition-colors ${
+                  isDarkMode
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Plus className="h-4 w-4" />
+                New Conversation
+              </button>
+            </div>
+
+            {/* Conversations List */}
+            <div className="flex-1 overflow-y-auto p-4">
+              {error && (
+                <div className={`mb-4 p-3 rounded-lg border ${
+                  isDarkMode
+                    ? 'bg-red-900/20 border-red-800 text-red-300'
+                    : 'bg-red-50 border-red-200 text-red-600'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4" />
+                    <span className="text-sm">{error}</span>
+                    <button 
+                      onClick={clearError}
+                      className="ml-auto text-xs underline"
+                    >
+                      Dismiss
+                    </button>
                   </div>
-                  <p className="text-sm">{step.text}</p>
-                </motion.div>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                {conversations.map((conversation) => (
+                  <motion.div
+                    key={conversation.id}
+                    whileHover={{ scale: 1.02 }}
+                    onClick={() => handleSelectConversation(conversation)}
+                    className={`group p-3 rounded-lg cursor-pointer transition-colors border ${
+                      currentConversation?.id === conversation.id
+                        ? isDarkMode
+                          ? 'bg-blue-900/30 border-blue-700'
+                          : 'bg-blue-50 border-blue-200'
+                        : isDarkMode
+                          ? 'hover:bg-gray-700 border-transparent'
+                          : 'hover:bg-gray-100 border-transparent'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MessageSquare className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                          <h3 className={`text-sm font-medium truncate ${
+                            isDarkMode ? 'text-white' : 'text-gray-900'
+                          }`}>
+                            {conversation.title}
+                          </h3>
+                        </div>
+                        <p className={`text-xs ${
+                          isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                        }`}>
+                          {formatTime(conversation.lastMessageAt)}
+                        </p>
+                      </div>
+                      <button
+                        onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                        className={`p-1.5 rounded opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 ${
+                          isDarkMode
+                            ? 'hover:bg-red-900/30 text-red-400 hover:text-red-300'
+                            : 'hover:bg-red-100 text-red-600 hover:text-red-700'
+                        }`}
+                        title="Delete conversation"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+
+              {conversations.length === 0 && !loading && (
+                <div className={`text-center py-8 ${
+                  isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                }`}>
+                  <MessageSquare className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p className="text-sm">No conversations yet.</p>
+                  <p className="text-xs mt-1">Start a new conversation to begin!</p>
+                </div>
+              )}
+            </div>
+
+            {/* User Info */}
+            <div className={`p-4 border-t ${
+              isDarkMode ? 'border-gray-700' : 'border-gray-200'
+            }`}>
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                }`}>
+                  <User className="h-4 w-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-sm font-medium truncate ${
+                    isDarkMode ? 'text-white' : 'text-gray-900'
+                  }`}>
+                    {user?.name || 'User'}
+                  </p>
+                  <p className={`text-xs truncate ${
+                    isDarkMode ? 'text-gray-400' : 'text-gray-500'
+                  }`}>
+                    {user?.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Main Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Chat Header */}
+        <div className={`p-4 border-b flex items-center justify-between ${
+          isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+        }`}>
+          {!showSidebar && (
+            <button
+              onClick={() => setShowSidebar(true)}
+              className={`p-2 rounded-lg mr-4 ${
+                isDarkMode 
+                  ? 'hover:bg-gray-700 text-gray-400' 
+                  : 'hover:bg-gray-100 text-gray-600'
+              }`}
+            >
+              <MessageSquare className="h-5 w-5" />
+            </button>
+          )}
+          
+          <h1 className={`text-xl font-semibold ${
+            isDarkMode ? 'text-white' : 'text-gray-900'
+          }`}>
+            {currentConversation ? currentConversation.title : 'Select a conversation or start a new one'}
+          </h1>
+        </div>
+
+        {/* Chat Messages */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {!currentConversation ? (
+            <div className={`text-center py-16 ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              <Bot className="h-16 w-16 mx-auto mb-4 opacity-50" />
+              <h3 className="text-lg font-medium mb-2">Welcome to your AI Health Assistant</h3>
+              <p className="text-sm mb-4">Start a new conversation to get personalized health insights and recommendations.</p>
+              <button
+                onClick={handleCreateNewConversation}
+                disabled={loading}
+                className={`inline-flex items-center gap-2 px-6 py-3 rounded-lg font-medium transition-colors ${
+                  isDarkMode
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-blue-500 hover:bg-blue-600 text-white'
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+              >
+                <Plus className="h-4 w-4" />
+                Start New Conversation
+              </button>
+            </div>
+          ) : (
+            <>
+              {chatHistory.map((chat) => (
+                <div key={chat.id} className="space-y-4">
+                  {/* User Message */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-start gap-3 justify-end"
+                  >
+                    <div className={`max-w-lg p-4 rounded-lg ${
+                      isDarkMode 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-blue-500 text-white'
+                    }`}>
+                      <div className="flex items-center gap-2 mb-2">
+                        {chat.messageType === 'file' && (
+                          <FileText className="h-4 w-4" />
+                        )}
+                        <span className="text-xs opacity-80">
+                          {formatTime(chat.createdAt)}
+                        </span>
+                      </div>
+                      <p className="text-sm">{chat.message}</p>
+                      {chat.fileInfo && (
+                        <div className="mt-2 text-xs opacity-80">
+                          📎 {chat.fileInfo.originalName} ({(chat.fileInfo.size / 1024).toFixed(1)} KB)
+                        </div>
+                      )}
+                    </div>
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                      isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
+                    }`}>
+                      <User className="h-4 w-4" />
+                    </div>
+                  </motion.div>
+
+                  {/* AI Response */}
+                  {chat.response && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-start gap-3"
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isDarkMode ? 'bg-purple-700' : 'bg-purple-100'
+                      }`}>
+                        <Bot className={`h-4 w-4 ${
+                          isDarkMode ? 'text-purple-300' : 'text-purple-600'
+                        }`} />
+                      </div>
+                      <div className={`max-w-lg p-4 rounded-lg ${
+                        isDarkMode 
+                          ? 'bg-gray-700 text-gray-300' 
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        <div className="text-xs opacity-60 mb-2">
+                          AI Assistant
+                          {chat.processingTime && (
+                            <span className="ml-2">
+                              • {chat.processingTime}ms
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm whitespace-pre-wrap">
+                          {chat.response}
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Loading indicator for pending response */}
+                  {!chat.isProcessed && !chat.response && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="flex items-start gap-3"
+                    >
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        isDarkMode ? 'bg-purple-700' : 'bg-purple-100'
+                      }`}>
+                        <Bot className={`h-4 w-4 ${
+                          isDarkMode ? 'text-purple-300' : 'text-purple-600'
+                        }`} />
+                      </div>
+                      <div className={`p-4 rounded-lg ${
+                        isDarkMode 
+                          ? 'bg-gray-700 text-gray-300' 
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        <div className="flex items-center gap-2">
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span className="text-sm">AI is thinking...</span>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </div>
               ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+        </div>
+
+        {/* Input Area */}
+        {currentConversation && (
+          <div className={`p-4 border-t ${
+            isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
+          }`}>
+            {/* File Selection Display */}
+            {selectedFile && (
+              <div className={`mb-3 p-3 rounded-lg border ${
+                isDarkMode 
+                  ? 'bg-gray-700 border-gray-600' 
+                  : 'bg-gray-50 border-gray-200'
+              }`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <FileText className="h-4 w-4 text-blue-500" />
+                    <span className={`text-sm ${
+                      isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                    }`}>
+                      {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => {
+                      setSelectedFile(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                    className={`text-xs ${
+                      isDarkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-500'
+                    }`}
+                  >
+                    Remove
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Input Controls */}
+            <div className="flex items-end gap-3">
+              <div className="flex-1">
+                <div
+                  className={`relative border rounded-lg ${
+                    dragActive
+                      ? 'border-blue-400 bg-blue-50 dark:bg-blue-900/30'
+                      : isDarkMode 
+                        ? 'border-gray-600' 
+                        : 'border-gray-300'
+                  }`}
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                >
+                  <textarea
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Describe your symptoms or ask a health question..."
+                    disabled={loading}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSendMessage();
+                      }
+                    }}
+                    className={`w-full p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${
+                      isDarkMode 
+                        ? 'bg-gray-700 text-white placeholder-gray-400' 
+                        : 'bg-white text-gray-900 placeholder-gray-500'
+                    }`}
+                    rows={3}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={loading}
+                  className={`p-3 rounded-lg transition-colors ${
+                    isDarkMode
+                      ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                      : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  <Upload className="h-5 w-5" />
+                </button>
+
+                <button
+                  onClick={handleSendMessage}
+                  disabled={loading || (!inputText.trim() && !selectedFile)}
+                  className={`p-3 rounded-lg transition-colors ${
+                    isDarkMode
+                      ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                      : 'bg-blue-500 hover:bg-blue-600 text-white'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {loading ? (
+                    <Loader2 className="h-5 w-5 animate-spin" />
+                  ) : (
+                    <Send className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            <div className={`mt-2 text-xs ${
+              isDarkMode ? 'text-gray-400' : 'text-gray-500'
+            }`}>
+              Press Enter to send, Shift+Enter for new line. Drag & drop files or click upload icon.
             </div>
           </div>
-        </motion.div>
+        )}
       </div>
     </div>
   );

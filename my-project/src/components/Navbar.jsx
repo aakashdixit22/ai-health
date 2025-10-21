@@ -1,14 +1,16 @@
-import React, { useState } from "react";
-import { ArrowRight, Sun, Moon, Menu, X, LogIn, UserPlus } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { ArrowRight, Sun, Moon, Menu, X, LogIn, UserPlus, User, LogOut, MessageCircle } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 const Navbar = () => {
   const { isDarkMode, toggleTheme } = useTheme();
-  const { isAuthenticated, logout } = useAuth();
+  const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+  const profileDropdownRef = useRef(null);
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -19,10 +21,28 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   };
 
+  // Close profile dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
+        setIsProfileDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   const handleLogout = () => {
     logout();
     navigate('/');
     setIsMobileMenuOpen(false);
+    setIsProfileDropdownOpen(false);
+  };
+
+  const handleChatNavigation = () => {
+    navigate('/second');
+    setIsProfileDropdownOpen(false);
   };
 
   const Button = ({ children, size, className = "", ...props }) => {
@@ -134,18 +154,92 @@ const Navbar = () => {
               </div>
             </button>
 
-            {/* Auth Buttons */}
+            {/* Auth Buttons / Profile */}
             {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className={`hidden md:flex items-center space-x-2 px-4 py-2 rounded-full font-medium transition-all ${
-                  isDarkMode
-                    ? 'bg-red-600 hover:bg-red-700 text-white'
-                    : 'bg-red-500 hover:bg-red-600 text-white'
-                }`}
-              >
-                <span>Logout</span>
-              </button>
+              <div className="hidden md:block relative" ref={profileDropdownRef}>
+                {/* Profile Button */}
+                <button
+                  onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
+                  className={`flex items-center space-x-3 px-4 py-2 rounded-full font-medium transition-all ${
+                    isDarkMode
+                      ? 'bg-gray-700/50 hover:bg-gray-600/50 text-white border border-gray-600'
+                      : 'bg-white/50 hover:bg-gray-50/80 text-gray-900 border border-gray-200'
+                  } shadow-lg hover:shadow-xl`}
+                >
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                    isDarkMode 
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
+                      : 'bg-gradient-to-r from-blue-400 to-purple-500'
+                  }`}>
+                    <User className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="flex flex-col items-start">
+                    <span className="text-sm font-medium">
+                      {user?.name || 'User'}
+                    </span>
+                    <span className={`text-xs ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                      {user?.email || 'user@example.com'}
+                    </span>
+                  </div>
+                </button>
+
+                {/* Profile Dropdown */}
+                {isProfileDropdownOpen && (
+                  <div className={`absolute right-0 mt-2 w-64 rounded-xl shadow-xl border backdrop-blur-md ${
+                    isDarkMode
+                      ? 'bg-gray-800/90 border-gray-700/50'
+                      : 'bg-white/90 border-gray-200/50'
+                  } py-2 z-50`}>
+                    {/* User Info Header */}
+                    <div className={`px-4 py-3 border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                      <div className="flex items-center space-x-3">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                          isDarkMode 
+                            ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
+                            : 'bg-gradient-to-r from-blue-400 to-purple-500'
+                        }`}>
+                          <User className="h-6 w-6 text-white" />
+                        </div>
+                        <div>
+                          <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                            {user?.name || 'User'}
+                          </p>
+                          <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                            {user?.email || 'user@example.com'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Menu Items */}
+                    <div className="py-1">
+                      <button
+                        onClick={handleChatNavigation}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-all ${
+                          isDarkMode
+                            ? 'hover:bg-gray-700/50 text-gray-200'
+                            : 'hover:bg-gray-100/50 text-gray-700'
+                        }`}
+                      >
+                        <MessageCircle className="h-4 w-4" />
+                        <span className="font-medium">AI Chat</span>
+                      </button>
+                      
+                      <button
+                        onClick={handleLogout}
+                        className={`w-full flex items-center space-x-3 px-4 py-3 text-left transition-all ${
+                          isDarkMode
+                            ? 'hover:bg-red-700/20 text-red-300 hover:text-red-200'
+                            : 'hover:bg-red-50/50 text-red-600 hover:text-red-700'
+                        }`}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        <span className="font-medium">Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             ) : (
               <div className="hidden md:flex items-center space-x-2">
                 <button
@@ -232,18 +326,60 @@ const Navbar = () => {
                 Contact
               </button>
 
-              {/* Mobile Auth Buttons */}
+              {/* Mobile Auth/Profile Section */}
               {isAuthenticated ? (
-                <button
-                  onClick={handleLogout}
-                  className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
-                    isDarkMode
-                      ? 'text-red-300 hover:bg-red-700/40 hover:text-red-100'
-                      : 'text-red-600 hover:bg-red-100/40 hover:text-red-800'
-                  }`}
-                >
-                  Logout
-                </button>
+                <>
+                  {/* User Info in Mobile */}
+                  <div className={`px-4 py-3 rounded-lg ${
+                    isDarkMode ? 'bg-gray-700/30' : 'bg-gray-100/30'
+                  } mb-2`}>
+                    <div className="flex items-center space-x-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                        isDarkMode 
+                          ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
+                          : 'bg-gradient-to-r from-blue-400 to-purple-500'
+                      }`}>
+                        <User className="h-5 w-5 text-white" />
+                      </div>
+                      <div>
+                        <p className={`font-medium ${isDarkMode ? 'text-white' : 'text-gray-900'}`}>
+                          {user?.name || 'User'}
+                        </p>
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-500'}`}>
+                          {user?.email || 'user@example.com'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={handleChatNavigation}
+                    className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                      isDarkMode
+                        ? 'text-blue-300 hover:bg-blue-700/40 hover:text-blue-100'
+                        : 'text-blue-600 hover:bg-blue-100/40 hover:text-blue-800'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <MessageCircle className="h-4 w-4" />
+                      <span>AI Chat</span>
+                    </div>
+                  </button>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className={`block w-full text-left rounded-lg px-4 py-3 text-base font-medium transition-all ${
+                      isDarkMode
+                        ? 'text-red-300 hover:bg-red-700/40 hover:text-red-100'
+                        : 'text-red-600 hover:bg-red-100/40 hover:text-red-800'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <LogOut className="h-4 w-4" />
+                      <span>Sign Out</span>
+                    </div>
+                  </button>
+                </>
               ) : (
                 <>
                   <button
@@ -254,7 +390,10 @@ const Navbar = () => {
                         : 'text-blue-600 hover:bg-blue-100/40 hover:text-blue-800'
                     }`}
                   >
-                    Login
+                    <div className="flex items-center space-x-2">
+                      <LogIn className="h-4 w-4" />
+                      <span>Login</span>
+                    </div>
                   </button>
                   <button
                     onClick={() => navigate('/signup')}
@@ -264,7 +403,10 @@ const Navbar = () => {
                         : 'text-green-600 hover:bg-green-100/40 hover:text-green-800'
                     }`}
                   >
-                    Sign Up
+                    <div className="flex items-center space-x-2">
+                      <UserPlus className="h-4 w-4" />
+                      <span>Sign Up</span>
+                    </div>
                   </button>
                 </>
               )}

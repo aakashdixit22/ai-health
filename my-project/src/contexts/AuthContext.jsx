@@ -20,10 +20,37 @@ export const AuthProvider = ({ children }) => {
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
-      // You can add token validation here if needed
+      // Fetch user details if token exists
+      fetchUserDetails(storedToken);
+    } else {
+      setLoading(false);
     }
-    setLoading(false);
   }, []);
+
+  const fetchUserDetails = async (authToken) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/me', {
+        headers: {
+          'Authorization': `Bearer ${authToken}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      } else {
+        // Token might be invalid, remove it
+        localStorage.removeItem('token');
+        setToken(null);
+      }
+    } catch (error) {
+      console.error('Error fetching user details:', error);
+      localStorage.removeItem('token');
+      setToken(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const login = async (email, password) => {
     try {
@@ -37,13 +64,13 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (data.success) {
         localStorage.setItem('token', data.token);
         setToken(data.token);
-        setUser({ email }); // You can expand this with more user data
-        return { success: true, message: 'Login successful!' };
+        setUser(data.user);
+        return { success: true, message: data.message };
       } else {
-        return { success: false, message: data.message || 'Login failed' };
+        return { success: false, message: data.message };
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -63,13 +90,13 @@ export const AuthProvider = ({ children }) => {
 
       const data = await response.json();
 
-      if (response.ok) {
+      if (data.success) {
         localStorage.setItem('token', data.token);
         setToken(data.token);
-        setUser({ email }); // You can expand this with more user data
-        return { success: true, message: data.message || 'Account created successfully!' };
+        setUser(data.user);
+        return { success: true, message: data.message };
       } else {
-        return { success: false, message: data.message || 'Signup failed' };
+        return { success: false, message: data.message };
       }
     } catch (error) {
       console.error('Signup error:', error);
