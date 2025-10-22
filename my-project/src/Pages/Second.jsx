@@ -12,6 +12,8 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useChat } from '../contexts/ChatContext';
@@ -430,8 +432,102 @@ function Second() {
                             </span>
                           )}
                         </div>
-                        <div className="text-sm whitespace-pre-wrap">
-                          {chat.response}
+                        <div className={`text-sm markdown-content ${
+                          isDarkMode ? 'markdown-dark' : 'markdown-light'
+                        }`}>
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              // Style markdown elements
+                              h1: ({children}) => (
+                                <h1 className={`text-lg font-bold mb-2 ${
+                                  isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                                }`}>{children}</h1>
+                              ),
+                              h2: ({children}) => (
+                                <h2 className={`text-base font-semibold mb-2 ${
+                                  isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                                }`}>{children}</h2>
+                              ),
+                              h3: ({children}) => (
+                                <h3 className={`text-sm font-semibold mb-1 ${
+                                  isDarkMode ? 'text-gray-200' : 'text-gray-800'
+                                }`}>{children}</h3>
+                              ),
+                              p: ({children}) => (
+                                <p className="mb-2 last:mb-0">{children}</p>
+                              ),
+                              ul: ({children}) => (
+                                <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>
+                              ),
+                              ol: ({children}) => (
+                                <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>
+                              ),
+                              li: ({children}) => (
+                                <li className="text-sm">{children}</li>
+                              ),
+                              strong: ({children}) => (
+                                <strong className={`font-semibold ${
+                                  isDarkMode ? 'text-gray-100' : 'text-gray-900'
+                                }`}>{children}</strong>
+                              ),
+                              em: ({children}) => (
+                                <em className="italic">{children}</em>
+                              ),
+                              code: ({children}) => (
+                                <code className={`px-1 py-0.5 rounded text-xs font-mono ${
+                                  isDarkMode 
+                                    ? 'bg-gray-800 text-purple-300' 
+                                    : 'bg-gray-200 text-purple-600'
+                                }`}>{children}</code>
+                              ),
+                              pre: ({children}) => (
+                                <pre className={`p-3 rounded-lg text-xs font-mono overflow-x-auto mb-2 ${
+                                  isDarkMode 
+                                    ? 'bg-gray-800 text-gray-300' 
+                                    : 'bg-gray-200 text-gray-700'
+                                }`}>{children}</pre>
+                              ),
+                              blockquote: ({children}) => (
+                                <blockquote className={`border-l-4 pl-3 italic mb-2 ${
+                                  isDarkMode 
+                                    ? 'border-purple-600 text-gray-400' 
+                                    : 'border-purple-400 text-gray-600'
+                                }`}>{children}</blockquote>
+                              ),
+                              table: ({children}) => (
+                                <div className="overflow-x-auto mb-2">
+                                  <table className={`min-w-full text-sm border ${
+                                    isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                                  }`}>{children}</table>
+                                </div>
+                              ),
+                              th: ({children}) => (
+                                <th className={`px-2 py-1 text-left font-semibold border-b ${
+                                  isDarkMode 
+                                    ? 'bg-gray-800 border-gray-600 text-gray-200' 
+                                    : 'bg-gray-100 border-gray-300 text-gray-800'
+                                }`}>{children}</th>
+                              ),
+                              td: ({children}) => (
+                                <td className={`px-2 py-1 border-b ${
+                                  isDarkMode ? 'border-gray-600' : 'border-gray-300'
+                                }`}>{children}</td>
+                              ),
+                              a: ({children, href}) => (
+                                <a 
+                                  href={href} 
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                  className={`underline hover:no-underline ${
+                                    isDarkMode ? 'text-blue-400' : 'text-blue-600'
+                                  }`}
+                                >{children}</a>
+                              )
+                            }}
+                          >
+                            {chat.response}
+                          </ReactMarkdown>
                         </div>
                       </div>
                     </motion.div>
