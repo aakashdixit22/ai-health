@@ -2,23 +2,47 @@ import React, { useState, useRef, useEffect } from "react";
 import { ArrowRight, Sun, Moon, Menu, X, LogIn, UserPlus, User, LogOut, MessageCircle } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const Navbar = () => {
   const { isDarkMode, toggleTheme } = useTheme();
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
   const profileDropdownRef = useRef(null);
 
-  const scrollToSection = (sectionId) => {
-    const element = document.getElementById(sectionId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+  const handleNavigation = (sectionId) => {
+    // If we're on the home page, scroll to section
+    if (location.pathname === '/') {
+      const element = document.getElementById(sectionId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else {
+      // If we're on another page, navigate to home page with hash
+      navigate(`/#${sectionId}`);
     }
     // Close mobile menu after clicking a link
     setIsMobileMenuOpen(false);
+  };
+
+  // Handle home page scrolling after navigation with hash
+  useEffect(() => {
+    if (location.pathname === '/' && location.hash) {
+      const sectionId = location.hash.substring(1); // Remove the #
+      setTimeout(() => {
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }, 100); // Small delay to ensure page is loaded
+    }
+  }, [location]);
+
+  const scrollToSection = (sectionId) => {
+    handleNavigation(sectionId);
   };
 
   // Close profile dropdown when clicking outside
@@ -75,7 +99,13 @@ const Navbar = () => {
           {/* Logo on Left */}
           <div className="flex items-center">
             <button
-              onClick={() => scrollToSection('home')}
+              onClick={() => {
+                if (location.pathname === '/') {
+                  scrollToSection('home');
+                } else {
+                  navigate('/');
+                }
+              }}
               className={`text-xl font-bold ${isDarkMode ? 'text-white' : 'text-black'}`}
             >
               HealthMindAI
