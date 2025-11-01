@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ArrowRight, Sun, Moon, Menu, X, LogIn, UserPlus, User, LogOut, MessageCircle } from "lucide-react";
+import { ArrowRight, Sun, Moon, Menu, X, LogIn, UserPlus, User, LogOut, MessageCircle, Heart } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 import { useAuth } from "../contexts/AuthContext";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -98,6 +98,13 @@ const Navbar = () => {
         }`}>
           {/* Logo on Left */}
           <div className="flex items-center">
+            <div className={`p-2 rounded-full mr-3 ${
+              isDarkMode 
+                ? 'bg-gradient-to-r from-blue-500 to-purple-600' 
+                : 'bg-gradient-to-r from-blue-400 to-purple-500'
+            }`}>
+              <Heart className="h-6 w-6 text-white" />
+            </div>
             <button
               onClick={() => {
                 if (location.pathname === '/') {

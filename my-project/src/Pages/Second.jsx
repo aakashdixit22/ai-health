@@ -158,11 +158,19 @@ function Second() {
   }
 
   return (
-    <div className={`min-h-screen flex transition-colors duration-300 ${
+    <div className={`min-h-screen transition-colors duration-300 ${
       isDarkMode 
         ? 'bg-gray-900' 
         : 'bg-gray-50'
     }`}>
+      {/* Mobile Overlay */}
+      {showSidebar && (
+        <div 
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setShowSidebar(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <AnimatePresence>
         {showSidebar && (
@@ -170,25 +178,25 @@ function Second() {
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             exit={{ x: -300 }}
-            className={`w-80 h-screen border-r flex flex-col ${
+            className={`fixed left-0 top-0 w-full max-w-xs md:w-80 h-screen border-r flex flex-col z-40 ${
               isDarkMode 
                 ? 'bg-gray-800 border-gray-700' 
                 : 'bg-white border-gray-200'
             }`}
           >
             {/* Sidebar Header */}
-            <div className={`p-4 border-b ${
+            <div className={`p-3 md:p-4 border-b ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
             }`}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className={`text-lg font-semibold ${
+              <div className="flex items-center justify-between mb-3 md:mb-4">
+                <h2 className={`text-base md:text-lg font-semibold truncate ${
                   isDarkMode ? 'text-white' : 'text-gray-900'
                 }`}>
                   Health Assistant
                 </h2>
                 <button
                   onClick={() => setShowSidebar(false)}
-                  className={`p-2 rounded-lg ${
+                  className={`p-1.5 md:p-2 rounded-lg flex-shrink-0 ${
                     isDarkMode 
                       ? 'hover:bg-gray-700 text-gray-400' 
                       : 'hover:bg-gray-100 text-gray-600'
@@ -201,31 +209,31 @@ function Second() {
               <button
                 onClick={handleCreateNewConversation}
                 disabled={loading}
-                className={`w-full flex items-center gap-2 p-3 rounded-lg font-medium transition-colors ${
+                className={`w-full flex items-center gap-2 p-2.5 md:p-3 rounded-lg font-medium transition-colors text-sm md:text-base ${
                   isDarkMode
                     ? 'bg-blue-600 hover:bg-blue-700 text-white'
                     : 'bg-blue-500 hover:bg-blue-600 text-white'
                 } disabled:opacity-50 disabled:cursor-not-allowed`}
               >
-                <Plus className="h-4 w-4" />
-                New Conversation
+                <Plus className="h-4 w-4 flex-shrink-0" />
+                <span className="truncate">New Conversation</span>
               </button>
             </div>
 
             {/* Conversations List */}
-            <div className="flex-1 overflow-y-auto p-4">
+            <div className="flex-1 overflow-y-auto p-3 md:p-4">
               {error && (
-                <div className={`mb-4 p-3 rounded-lg border ${
+                <div className={`mb-4 p-2.5 md:p-3 rounded-lg border text-sm ${
                   isDarkMode
                     ? 'bg-red-900/20 border-red-800 text-red-300'
                     : 'bg-red-50 border-red-200 text-red-600'
                 }`}>
                   <div className="flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm">{error}</span>
+                    <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                    <span className="text-xs md:text-sm truncate">{error}</span>
                     <button 
                       onClick={clearError}
-                      className="ml-auto text-xs underline"
+                      className="ml-auto text-xs underline flex-shrink-0"
                     >
                       Dismiss
                     </button>
@@ -239,7 +247,7 @@ function Second() {
                     key={conversation.id}
                     whileHover={{ scale: 1.02 }}
                     onClick={() => handleSelectConversation(conversation)}
-                    className={`group p-3 rounded-lg cursor-pointer transition-colors border ${
+                    className={`group p-2.5 md:p-3 rounded-lg cursor-pointer transition-colors border ${
                       currentConversation?.id === conversation.id
                         ? isDarkMode
                           ? 'bg-blue-900/30 border-blue-700'
@@ -252,8 +260,8 @@ function Second() {
                     <div className="flex items-start justify-between">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <MessageSquare className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                          <h3 className={`text-sm font-medium truncate ${
+                          <MessageSquare className="h-3 w-3 md:h-4 md:w-4 text-blue-500 flex-shrink-0" />
+                          <h3 className={`text-xs md:text-sm font-medium truncate ${
                             isDarkMode ? 'text-white' : 'text-gray-900'
                           }`}>
                             {conversation.title}
@@ -267,14 +275,14 @@ function Second() {
                       </div>
                       <button
                         onClick={(e) => handleDeleteConversation(conversation.id, e)}
-                        className={`p-1.5 rounded opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 ${
+                        className={`p-1 md:p-1.5 rounded opacity-0 group-hover:opacity-100 transition-all duration-200 hover:scale-110 flex-shrink-0 ${
                           isDarkMode
                             ? 'hover:bg-red-900/30 text-red-400 hover:text-red-300'
                             : 'hover:bg-red-100 text-red-600 hover:text-red-700'
                         }`}
                         title="Delete conversation"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3 w-3 md:h-4 md:w-4" />
                       </button>
                     </div>
                   </motion.div>
@@ -293,17 +301,17 @@ function Second() {
             </div>
 
             {/* User Info */}
-            <div className={`p-4 border-t ${
+            <div className={`p-3 md:p-4 border-t ${
               isDarkMode ? 'border-gray-700' : 'border-gray-200'
             }`}>
-              <div className="flex items-center gap-3">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+              <div className="flex items-center gap-2 md:gap-3">
+                <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
                   isDarkMode ? 'bg-gray-700' : 'bg-gray-200'
                 }`}>
-                  <User className="h-4 w-4" />
+                  <User className="h-3 w-3 md:h-4 md:w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium truncate ${
+                  <p className={`text-xs md:text-sm font-medium truncate ${
                     isDarkMode ? 'text-white' : 'text-gray-900'
                   }`}>
                     {user?.name || 'User'}
@@ -321,25 +329,27 @@ function Second() {
       </AnimatePresence>
 
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
+      <div className={`flex-1 flex flex-col transition-all duration-300 ${
+        showSidebar ? 'md:ml-80' : 'ml-0'
+      }`}>
         {/* Chat Header */}
-        <div className={`p-4 border-b flex items-center justify-between ${
+        <div className={`p-3 md:p-4 border-b flex items-center justify-between relative z-10 ${
           isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
         }`}>
           {!showSidebar && (
             <button
               onClick={() => setShowSidebar(true)}
-              className={`p-2 rounded-lg mr-4 ${
+              className={`p-1.5 md:p-2 rounded-lg mr-2 md:mr-4 flex-shrink-0 ${
                 isDarkMode 
                   ? 'hover:bg-gray-700 text-gray-400' 
                   : 'hover:bg-gray-100 text-gray-600'
               }`}
             >
-              <MessageSquare className="h-5 w-5" />
+              <MessageSquare className="h-4 w-4 md:h-5 md:w-5" />
             </button>
           )}
           
-          <h1 className={`text-xl font-semibold ${
+          <h1 className={`text-base md:text-xl font-semibold truncate ${
             isDarkMode ? 'text-white' : 'text-gray-900'
           }`}>
             {currentConversation ? currentConversation.title : 'Select a conversation or start a new one'}
@@ -347,7 +357,7 @@ function Second() {
         </div>
 
         {/* Chat Messages */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+        <div className="flex-1 overflow-y-auto p-3 md:p-4 space-y-3 md:space-y-4">
           {!currentConversation ? (
             <div className={`text-center py-16 ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
@@ -568,20 +578,20 @@ function Second() {
 
         {/* Input Area */}
         {currentConversation && (
-          <div className={`p-4 border-t ${
+          <div className={`p-3 md:p-4 border-t ${
             isDarkMode ? 'border-gray-700 bg-gray-800' : 'border-gray-200 bg-white'
           }`}>
             {/* File Selection Display */}
             {selectedFile && (
-              <div className={`mb-3 p-3 rounded-lg border ${
+              <div className={`mb-3 p-2.5 md:p-3 rounded-lg border ${
                 isDarkMode 
                   ? 'bg-gray-700 border-gray-600' 
                   : 'bg-gray-50 border-gray-200'
               }`}>
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-blue-500" />
-                    <span className={`text-sm ${
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <FileText className="h-3 w-3 md:h-4 md:w-4 text-blue-500 flex-shrink-0" />
+                    <span className={`text-xs md:text-sm truncate ${
                       isDarkMode ? 'text-gray-300' : 'text-gray-700'
                     }`}>
                       {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
@@ -594,7 +604,7 @@ function Second() {
                         fileInputRef.current.value = '';
                       }
                     }}
-                    className={`text-xs ${
+                    className={`text-xs flex-shrink-0 ml-2 ${
                       isDarkMode ? 'text-red-400 hover:text-red-300' : 'text-red-600 hover:text-red-500'
                     }`}
                   >
@@ -605,7 +615,7 @@ function Second() {
             )}
 
             {/* Input Controls */}
-            <div className="flex items-end gap-3">
+            <div className="flex items-end gap-2 md:gap-3">
               <div className="flex-1">
                 <div
                   className={`relative border rounded-lg ${
@@ -631,17 +641,17 @@ function Second() {
                         handleSendMessage();
                       }
                     }}
-                    className={`w-full p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 ${
+                    className={`w-full p-2.5 md:p-3 rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 text-sm md:text-base ${
                       isDarkMode 
                         ? 'bg-gray-700 text-white placeholder-gray-400' 
                         : 'bg-white text-gray-900 placeholder-gray-500'
                     }`}
-                    rows={3}
+                    rows={window.innerWidth < 768 ? 2 : 3}
                   />
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex gap-1.5 md:gap-2 flex-shrink-0">
                 <input
                   ref={fileInputRef}
                   type="file"
@@ -652,28 +662,28 @@ function Second() {
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   disabled={loading}
-                  className={`p-3 rounded-lg transition-colors ${
+                  className={`p-2 md:p-3 rounded-lg transition-colors ${
                     isDarkMode
                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                       : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
-                  <Upload className="h-5 w-5" />
+                  <Upload className="h-4 w-4 md:h-5 md:w-5" />
                 </button>
 
                 <button
                   onClick={handleSendMessage}
                   disabled={loading || (!inputText.trim() && !selectedFile)}
-                  className={`p-3 rounded-lg transition-colors ${
+                  className={`p-2 md:p-3 rounded-lg transition-colors ${
                     isDarkMode
                       ? 'bg-blue-600 hover:bg-blue-700 text-white'
                       : 'bg-blue-500 hover:bg-blue-600 text-white'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
                 >
                   {loading ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
+                    <Loader2 className="h-4 w-4 md:h-5 md:w-5 animate-spin" />
                   ) : (
-                    <Send className="h-5 w-5" />
+                    <Send className="h-4 w-4 md:h-5 md:w-5" />
                   )}
                 </button>
               </div>
@@ -681,7 +691,7 @@ function Second() {
 
             <div className={`mt-2 text-xs ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
-            }`}>
+            } hidden md:block`}>
               Press Enter to send, Shift+Enter for new line. Drag & drop files or click upload icon.
             </div>
           </div>
