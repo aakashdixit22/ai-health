@@ -25,6 +25,9 @@ export const ChatProvider = ({ children }) => {
 
   // Helper function for API calls
   const apiCall = async (endpoint, options = {}) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         headers: {
@@ -32,19 +35,27 @@ export const ChatProvider = ({ children }) => {
           'Authorization': `Bearer ${token}`,
           ...options.headers,
         },
+        signal: controller.signal,
         ...options,
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || 'API request failed');
       }
-      
+
       return data;
     } catch (error) {
-      console.error('API call error:', error);
-      throw error;
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('API call timed out:', endpoint);
+        throw new Error('Request timed out. Please try again.');
+      } else {
+        console.error('API call error:', error);
+        throw error;
+      }
     }
   };
 
@@ -127,21 +138,21 @@ export const ChatProvider = ({ children }) => {
       
       if (aiResponse) {
         // Update the chat with AI response
-        const updatedChatData = await apiCall(
-          `/conversations/${currentConversation.id}/chats/${newChat.id}`, 
+        await apiCall(
+          `/conversations/${currentConversation.id}/chats/${newChat.id}`,
           {
             method: 'PUT',
-            body: JSON.stringify({ 
-              response: aiResponse.response, 
-              processingTime: aiResponse.processing_time 
+            body: JSON.stringify({
+              response: aiResponse.response,
+              processingTime: aiResponse.processing_time
             }),
           }
         );
 
         // Update chat history with AI response
-        setChatHistory(prev => 
-          prev.map(chat => 
-            chat.id === newChat.id 
+        setChatHistory(prev =>
+          prev.map(chat =>
+            chat.id === newChat.id
               ? { ...chat, response: aiResponse.response, isProcessed: true }
               : chat
           )
@@ -160,10 +171,14 @@ export const ChatProvider = ({ children }) => {
 
   // Get AI response from Flask API
   const getAIResponse = async (message, history = [], messageType = 'text', fileInfo = null) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
       if (messageType === 'file' && fileInfo) {
         // For file uploads, we need to handle differently
         // This would be called from a file upload handler
+        clearTimeout(timeoutId);
         return await getAIResponseFromFile(fileInfo, history);
       } else {
         // For text messages
@@ -179,7 +194,10 @@ export const ChatProvider = ({ children }) => {
               response: chat.response
             }))
           }),
+          signal: controller.signal,
         });
+
+        clearTimeout(timeoutId);
 
         if (!response.ok) {
           throw new Error('AI API request failed');
@@ -188,13 +206,22 @@ export const ChatProvider = ({ children }) => {
         return await response.json();
       }
     } catch (error) {
-      console.error('AI API error:', error);
-      throw error;
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('AI API request timed out');
+        throw new Error('AI request timed out. Please try again.');
+      } else {
+        console.error('AI API error:', error);
+        throw error;
+      }
     }
   };
 
   // Get AI response from file upload
   const getAIResponseFromFile = async (file, history = []) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
       const formData = new FormData();
       formData.append('file', file);
@@ -208,7 +235,10 @@ export const ChatProvider = ({ children }) => {
       const response = await fetch(`${AI_API_URL}/analyze-file`, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error('File analysis failed');
@@ -216,8 +246,14 @@ export const ChatProvider = ({ children }) => {
 
       return await response.json();
     } catch (error) {
-      console.error('File analysis error:', error);
-      throw error;
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('File analysis request timed out');
+        throw new Error('File analysis timed out. Please try again.');
+      } else {
+        console.error('File analysis error:', error);
+        throw error;
+      }
     }
   };
 

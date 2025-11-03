@@ -1,9 +1,53 @@
-import React from "react";
-import { Facebook, Twitter, Instagram, Linkedin, Heart, Shield, Users, Mail, Phone, MapPin } from "lucide-react";
+import React, { useState } from "react";
+import { Facebook, Twitter, Instagram, Linkedin, Heart, Shield, Users, Mail, Phone, MapPin, Loader2 } from "lucide-react";
 import { useTheme } from "../contexts/ThemeContext";
 
 const Footer = () => {
   const { isDarkMode } = useTheme();
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!email.trim()) {
+      setMessage('Please enter an email address.');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setMessage('Please enter a valid email address.');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const response = await fetch('http://localhost:5000/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setMessage('Subscription successful! Confirmation email has been sent.');
+        setEmail('');
+      } else {
+        setMessage(data.message || 'Failed to subscribe. Please try again.');
+      }
+    } catch (error) {
+      console.error('Subscription error:', error);
+      setMessage('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
   
   return (
     <footer className={`border-t transition-colors duration-300 ${
@@ -134,28 +178,44 @@ const Footer = () => {
               }`}>
                 Get the latest health insights and wellness tips delivered to your inbox
               </p>
-              <form className="flex flex-col gap-3">
+              <form onSubmit={handleSubscribe} className="flex flex-col gap-3">
                 <div className="flex">
                   <input
                     type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
+                    disabled={loading}
                     className={`px-4 py-2.5 rounded-l-lg flex-1 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 border ${
-                      isDarkMode 
-                        ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400' 
+                      isDarkMode
+                        ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-400'
                         : 'bg-white border-gray-300 text-gray-900 placeholder-gray-500'
-                    }`}
+                    } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
                   <button
                     type="submit"
-                    className={`px-6 py-2.5 rounded-r-lg text-white text-sm font-medium transition-all duration-200 ${
-                      isDarkMode 
-                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700' 
+                    disabled={loading}
+                    className={`px-6 py-2.5 rounded-r-lg text-white text-sm font-medium transition-all duration-200 flex items-center gap-2 ${
+                      isDarkMode
+                        ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700'
                         : 'bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600'
-                    } hover:shadow-lg transform hover:scale-105`}
+                    } hover:shadow-lg transform hover:scale-105 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    Subscribe
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Subscribing...
+                      </>
+                    ) : (
+                      'Subscribe'
+                    )}
                   </button>
                 </div>
+                {message && (
+                  <p className={`text-sm ${message.includes('successful') ? 'text-green-500' : 'text-red-500'}`}>
+                    {message}
+                  </p>
+                )}
               </form>
             </div>
           </div>
@@ -177,20 +237,23 @@ const Footer = () => {
                 { Icon: Twitter, href: "#", label: "Twitter", color: "hover:text-sky-500" },
                 { Icon: Instagram, href: "#", label: "Instagram", color: "hover:text-pink-500" },
                 { Icon: Linkedin, href: "#", label: "LinkedIn", color: "hover:text-blue-600" }
-              ].map(({ Icon, href, label, color }, i) => (
-                <a
-                  key={i}
-                  href={href}
-                  aria-label={label}
-                  className={`p-3 rounded-full transition-all duration-200 transform hover:scale-110 hover:-translate-y-1 ${
-                    isDarkMode 
-                      ? 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700' 
-                      : 'bg-gray-100 text-gray-500 hover:bg-white border border-gray-200 hover:shadow-lg'
-                  } ${color}`}
-                >
-                  <Icon size={20} />
-                </a>
-              ))}
+              ].map((item, i) => {
+                const { Icon, href, label, color } = item;
+                return (
+                  <a
+                    key={i}
+                    href={href}
+                    aria-label={label}
+                    className={`p-3 rounded-full transition-all duration-200 transform hover:scale-110 hover:-translate-y-1 ${
+                      isDarkMode
+                        ? 'bg-gray-800 text-gray-400 hover:bg-gray-700 border border-gray-700'
+                        : 'bg-gray-100 text-gray-500 hover:bg-white border border-gray-200 hover:shadow-lg'
+                    } ${color}`}
+                  >
+                    <Icon size={20} />
+                  </a>
+                );
+              })}
             </div>
           </div>
 

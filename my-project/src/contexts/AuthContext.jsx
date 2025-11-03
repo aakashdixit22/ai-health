@@ -28,12 +28,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const fetchUserDetails = async (authToken) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/me', {
         headers: {
           'Authorization': `Bearer ${authToken}`,
         },
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
 
       if (response.ok) {
         const data = await response.json();
@@ -44,7 +50,12 @@ export const AuthProvider = ({ children }) => {
         setToken(null);
       }
     } catch (error) {
-      console.error('Error fetching user details:', error);
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('Request timed out while fetching user details');
+      } else {
+        console.error('Error fetching user details:', error);
+      }
       localStorage.removeItem('token');
       setToken(null);
     } finally {
@@ -53,6 +64,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/login', {
         method: 'POST',
@@ -60,8 +74,10 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (data.success) {
@@ -73,12 +89,21 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: data.message };
       }
     } catch (error) {
-      console.error('Login error:', error);
-      return { success: false, message: 'Network error. Please check if the server is running.' };
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('Login request timed out');
+        return { success: false, message: 'Request timed out. Please try again.' };
+      } else {
+        console.error('Login error:', error);
+        return { success: false, message: 'Network error. Please check if the server is running.' };
+      }
     }
   };
 
   const signup = async (name, email, password) => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
     try {
       const response = await fetch('http://localhost:5000/api/auth/signup', {
         method: 'POST',
@@ -86,8 +111,10 @@ export const AuthProvider = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ name, email, password }),
+        signal: controller.signal,
       });
 
+      clearTimeout(timeoutId);
       const data = await response.json();
 
       if (data.success) {
@@ -99,8 +126,14 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: data.message };
       }
     } catch (error) {
-      console.error('Signup error:', error);
-      return { success: false, message: 'Network error. Please check if the server is running.' };
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        console.error('Signup request timed out');
+        return { success: false, message: 'Request timed out. Please try again.' };
+      } else {
+        console.error('Signup error:', error);
+        return { success: false, message: 'Network error. Please check if the server is running.' };
+      }
     }
   };
 
