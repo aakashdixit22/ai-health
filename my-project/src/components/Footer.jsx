@@ -148,22 +148,17 @@ const Footer = () => {
             
             {/* Contact Info */}
             <div className="space-y-4 mb-8">
-              <div className="flex items-center gap-3">
-                <Mail className={`h-4 w-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-500'}`} />
-                <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  support@healthmindai.com
-                </span>
-              </div>
+              
               <div className="flex items-center gap-3">
                 <Phone className={`h-4 w-4 ${isDarkMode ? 'text-green-400' : 'text-green-500'}`} />
                 <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  +1 (555) 123-4567
+                  +917849593749
                 </span>
               </div>
               <div className="flex items-center gap-3">
                 <MapPin className={`h-4 w-4 ${isDarkMode ? 'text-red-400' : 'text-red-500'}`} />
                 <span className={`text-sm ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>
-                  San Francisco, CA
+                  Delhi, India
                 </span>
               </div>
             </div>
