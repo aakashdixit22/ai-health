@@ -158,7 +158,7 @@ function Second() {
   }
 
   return (
-    <div className={`min-h-screen transition-colors duration-300 ${
+    <div className={`min-h-screen flex transition-colors duration-300 ${
       isDarkMode 
         ? 'bg-gray-900' 
         : 'bg-gray-50'
@@ -329,7 +329,7 @@ function Second() {
       </AnimatePresence>
 
       {/* Main Chat Area */}
-      <div className={`flex-1 flex flex-col transition-all duration-300 ${
+      <div className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${
         showSidebar ? 'md:ml-80' : 'ml-0'
       }`}>
         {/* Chat Header */}
