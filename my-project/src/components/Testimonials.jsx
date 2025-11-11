@@ -8,22 +8,29 @@ const testimonials = [
     role: "Software Engineer",
     feedback:
       "This platform helped me understand my health better with instant AI recommendations. Super intuitive and reliable!",
-    avatar: "https://i.pravatar.cc/150?img=32",
+    avatar: "https://i.pravatar.cc/150?img=44",
   },
   {
-    name: "Priya Sharma",
-    role: "Product Manager",
+    name: "Abhay",
+    role: "Medical Student",
     feedback:
       "The personalized suggestions were spot-on. I love the smooth experience and clear guidance.",
-    avatar: "https://i.pravatar.cc/150?img=47",
+    avatar: "https://i.pravatar.cc/150?img=8",
   },
   {
     name: "Rahul Verma",
-    role: "Data Scientist",
+    role: "Computer Science Student",
     feedback:
       "The UI feels premium and the AI insights are impressive. Definitely a game-changer for health tech!",
-    avatar: "https://i.pravatar.cc/150?img=15",
+    avatar: "https://i.pravatar.cc/150?img=14",
   },
+  {
+    name: "Aryan",
+    role: "Product Manager",
+    feedback:
+      "The personalized suggestions were spot-on. I love the smooth experience and clear guidance.",
+    avatar: "https://i.pravatar.cc/150?img=12",
+  }
 ];
 
 const Testimonials = () => {
