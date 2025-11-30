@@ -9,7 +9,9 @@ import {
   User, 
   Bot,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Mic,
+  MicOff
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
@@ -42,6 +44,8 @@ function Second() {
   const [dragActive, setDragActive] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showSidebar, setShowSidebar] = useState(true);
+  const [isListening, setIsListening] = useState(false);
+  const [recognition, setRecognition] = useState(null);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
 
@@ -63,6 +67,36 @@ function Second() {
       loadConversations();
     }
   }, [isAuthenticated]);
+
+  // Initialize speech recognition
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognitionInstance = new SpeechRecognition();
+      recognitionInstance.continuous = false;
+      recognitionInstance.interimResults = true;
+      recognitionInstance.lang = 'en-US';
+
+      recognitionInstance.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map(result => result[0])
+          .map(result => result.transcript)
+          .join('');
+        setInputText(transcript);
+      };
+
+      recognitionInstance.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionInstance.onend = () => {
+        setIsListening(false);
+      };
+
+      setRecognition(recognitionInstance);
+    }
+  }, []);
 
   const handleDrag = (e) => {
     e.preventDefault();
@@ -86,6 +120,21 @@ function Second() {
   const handleFileSelect = (e) => {
     if (e.target.files && e.target.files[0]) {
       setSelectedFile(e.target.files[0]);
+    }
+  };
+
+  const handleVoiceRecognition = () => {
+    if (!recognition) {
+      alert('Speech recognition is not supported in your browser. Please use Chrome, Edge, or Safari.');
+      return;
+    }
+
+    if (isListening) {
+      recognition.stop();
+      setIsListening(false);
+    } else {
+      recognition.start();
+      setIsListening(true);
     }
   };
 
@@ -667,8 +716,30 @@ function Second() {
                       ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                       : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
                   } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  title="Upload file"
                 >
                   <Upload className="h-4 w-4 md:h-5 md:w-5" />
+                </button>
+
+                <button
+                  onClick={handleVoiceRecognition}
+                  disabled={loading}
+                  className={`p-2 md:p-3 rounded-lg transition-colors ${
+                    isListening
+                      ? isDarkMode
+                        ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+                        : 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
+                      : isDarkMode
+                        ? 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-600'
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  title={isListening ? 'Stop recording' : 'Start voice input'}
+                >
+                  {isListening ? (
+                    <MicOff className="h-4 w-4 md:h-5 md:w-5" />
+                  ) : (
+                    <Mic className="h-4 w-4 md:h-5 md:w-5" />
+                  )}
                 </button>
 
                 <button
@@ -692,7 +763,7 @@ function Second() {
             <div className={`mt-2 text-xs ${
               isDarkMode ? 'text-gray-400' : 'text-gray-500'
             } hidden md:block`}>
-              Press Enter to send, Shift+Enter for new line. Drag & drop files or click upload icon.
+              Press Enter to send, Shift+Enter for new line. Drag & drop files, click upload icon, or use voice input.
             </div>
           </div>
         )}
