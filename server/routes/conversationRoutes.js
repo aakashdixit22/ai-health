@@ -274,58 +274,58 @@ router.put("/:conversationId/chats/:chatId", authenticateToken, async (req, res)
   }
 });
 
-// Update conversation title
-router.put("/:id", authenticateToken, async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { title } = req.body;
+// // Update conversation title
+// router.put("/:id", authenticateToken, async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { title } = req.body;
 
-    if (!title || title.trim() === '') {
-      return res.status(400).json({
-        success: false,
-        message: "Title is required"
-      });
-    }
+//     if (!title || title.trim() === '') {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Title is required"
+//       });
+//     }
 
-    const user = await User.findById(req.user.id);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: "User not found"
-      });
-    }
+//     const user = await User.findById(req.user.id);
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "User not found"
+//       });
+//     }
 
-    const conversation = user.conversations.find(
-      conv => conv.conversationId === id && conv.isActive
-    );
+//     const conversation = user.conversations.find(
+//       conv => conv.conversationId === id && conv.isActive
+//     );
 
-    if (!conversation) {
-      return res.status(404).json({
-        success: false,
-        message: "Conversation not found"
-      });
-    }
+//     if (!conversation) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Conversation not found"
+//       });
+//     }
 
-    conversation.title = title.trim();
-    await user.save();
+//     conversation.title = title.trim();
+//     await user.save();
 
-    res.json({
-      success: true,
-      message: "Conversation updated successfully",
-      conversation: {
-        id: conversation.conversationId,
-        title: conversation.title,
-        lastMessageAt: conversation.lastMessageAt
-      }
-    });
-  } catch (err) {
-    console.error('Update conversation error:', err);
-    res.status(500).json({ 
-      success: false, 
-      message: "Server error" 
-    });
-  }
-});
+//     res.json({
+//       success: true,
+//       message: "Conversation updated successfully",
+//       conversation: {
+//         id: conversation.conversationId,
+//         title: conversation.title,
+//         lastMessageAt: conversation.lastMessageAt
+//       }
+//     });
+//   } catch (err) {
+//     console.error('Update conversation error:', err);
+//     res.status(500).json({ 
+//       success: false, 
+//       message: "Server error" 
+//     });
+//   }
+// });
 
 // Delete a conversation (soft delete)
 router.delete("/:id", authenticateToken, async (req, res) => {

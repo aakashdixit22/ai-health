@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/* Hide white line above navbar in dark mode only */
+html.dark, html.dark body {
+  margin: 0;
+  padding: 0;
+  background-color: #111827;
+}
